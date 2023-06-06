@@ -665,12 +665,12 @@ If we were to construct a DFA for MIPS lables
     - All other transitions go to an error state.
 
 # Lecture 7
-## δ<sup>∗</sup>
+## DFA δ<sup>∗</sup>
 δ<sup>∗</sup> : (Q × Σ<sup>∗</sup>) → Q
-- δ<sup>∗</sup>(q, ε) → q ; (*base case*)
+- δ<sup>∗</sup>(q, ε) → q, (*base case*)
 - δ<sup>∗</sup>(q, aw) → δ<sup>∗</sup>(δ(q, a), w)
 
-where a ∈ Σ and w ∈ Σ<sup>∗</sup>
+where q ∈ Q, a ∈ Σ and w ∈ Σ<sup>∗</sup>
 
 This is the formal definition, but it just means that when processing a string with DFA, it first process the first letter, then process the rest of the string, recursively until base case
 
@@ -729,19 +729,23 @@ An NFA is a 5-tuple (Σ, Q, q<sub>0</sub>, A, δ):
 - Q is a finite non-empty set of states.
 - q<sub>0</sub> ∈ Q is a start state
 - A ⊆ Q is a set of accepting states
-- δ : (Q × Σ ) → 2<sup>Q</sup> is our [total] transition function. Note that 2<sup>Q</sup> denotes the power set of Q, that is, the set of all subsets of Q (covered in 239). This allows us to go to multiple states at once!
+- δ : (Q × Σ ) → 2<sup>Q</sup> is our [total] transition function
+    - Note that 2<sup>Q</sup> denotes the *power set* of Q, that is, the set of all subsets of Q (covered in 239). This allows us to go to multiple states at once!
 
 The definition is exactly the same as DFA, except for δ !!!
 
-### δ<sup>*</sup>
+### NFA δ<sup>*</sup>
 We extend the definition of δ:(Q × Σ) → 2<sup>Q</sup> to a function δ<sup>∗</sup>: (2<sup>Q</sup> × Σ<sup>∗</sup>) → 2<sup>Q</sup> via:
 
-<img src="img/lec7-4.png">
+- δ<sup>∗</sup>(S, ε) -> S
+- δ<sup>∗</sup>(S, aw) -> δ<sup>∗</sup>( Union(q: S) δ(q, a) , w )
+    - note that δ(q, a) gives a subset of Q, and union of multiple subsets of Q is still a subset of Q
+<!-- <img src="img/lec7-4.png"> -->
+where S ⊆ Q, a ∈ Σ and w ∈ Σ<sup>∗</sup>
 
-where a ∈ Σ and w ∈ Σ<sup>∗</sup>
+The biggest difference compare to DFA δ<sup>* </sup> is that the first argument in δ<sup>*</sup> is now a subset of Q, instead of an element in Q
 
-Now we can give a formal definition for what it means to accept a string in NFA
-
+Now we can give a formal definition for what it means to accept a string in NFA. \
 An NFA given by *M = (Σ, Q, q<sub>0</sub>, A, δ)* **accepts a string** *w* if and only if *δ<sup>∗</sup>({q<sub>0</sub>}, w) ∩ A != ∅*
 
 The language of an NFA *M* is the set of **all** strings accepted by *M*, that is: *L(M) = {w : M accepts w}*
@@ -781,8 +785,7 @@ Language of strings end in *bba*, with input *w = abbba*
 
 Since *{q<sub>0</sub>, q<sub>3</sub>} ∩ q<sub>3</sub> != ∅*, accept *w = abbba*
 
+# Lecture 8
 ## NFA to DFA
 - NFAs are not more powerful than DFAs!
 - Why not: Even the power-set of a set of states is still finite. So, we can represent sets of states in the NFA as single states in the DFA!
-
-# Lecture 8
