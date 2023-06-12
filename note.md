@@ -526,8 +526,8 @@ Break it down into
 ``` c++
 // Use bit shift, bitwise or, bit mask 
 int instr = (5 << 26) | (2 << 21) | (0 << 16) | (-3 & 0xffff);  // corespond to 339804157 in decimal
-// can't just cout << instr, this will print 9 bytes each correspond to ASCII value of a digit in 339804157
-// instead, use char, which will be printed directly with no extra convertion
+// can't just cout << instr, this will print 9 bytes (char is 1 byte) each correspond to ASCII value of a digit in 339804157
+// instead, use unsigned char, which will be printed directly with no extra convertion
 // explicitly state unsigned, since char by default could be signed or unsigned, depending on system
 unsigned char c = instr >> 24;
 cout << c;
@@ -729,7 +729,7 @@ An NFA is a 5-tuple (Σ, Q, q<sub>0</sub>, A, δ):
 - Q is a finite non-empty set of states.
 - q<sub>0</sub> ∈ Q is a start state
 - A ⊆ Q is a set of accepting states
-- δ : (Q × Σ ) → 2<sup>Q</sup> is our [total] transition function
+- δ : (Q × Σ) → 2<sup>Q</sup> is our [total] transition function
     - Note that 2<sup>Q</sup> denotes the *power set* of Q, that is, the set of all subsets of Q (covered in 239). This allows us to go to multiple states at once!
 
 The definition is exactly the same as DFA, except for δ !!!
@@ -785,7 +785,227 @@ Language of strings end in *bba*, with input *w = abbba*
 
 Since *{q<sub>0</sub>, q<sub>3</sub>} ∩ q<sub>3</sub> != ∅*, accept *w = abbba*
 
-# Lecture 8
 ## NFA to DFA
 - NFAs are not more powerful than DFAs!
 - Why not: Even the power-set of a set of states is still finite. So, we can represent sets of states in the NFA as single states in the DFA!
+
+The previous NFA becomes the DFA. This convertion algorithm is not testable material!!!
+
+<img src="img/lec7-6.png">
+
+# Lecture 8
+### Summary
+- From Kleene’s theorem, the set of languages accepted by a DFA are the regular languages
+- The set of languages accepted by DFAs are the same as those accepted by NFAs
+- Therefore, the set of languages accepted by an NFA are precisely the regular languages!
+
+Comparing to DFA, we gained no new computer power from an NFA. \
+What if we permitted state changes without reading a character (hence reading ε, called ε-transition)?
+
+<img src="img/lec8-1.png">
+
+## ε-Non-Deterministic Finite Automata (ε-NFA)
+An ε-NFA is a 5-tuple (Σ, Q, q0, A, δ):
+- Σ is a finite non-empty set (alphabet) **that does not
+contain the symbol ε**.
+- Q is a finite non-empty set of states.
+- q<sub>0</sub> ∈ Q is a start state
+- A ⊆ Q is a set of accepting states
+- δ : (Q × (Σ ∪ {ε})) → 2<sup>Q</sup> is our [total] transition function. Note that 2<sup>Q</sup> denotes the power set of Q, that is, the set of all subsets of Q. This allows us to go to multiple states at once!
+
+Now we can use ε-transition to make it trivial to take the union of two NFAs
+
+Ex: L = {abc} ∪ {w : w ends with cc}
+<img src = "img/lec8-2.png">
+
+### ε-NFA δ<sup>∗</sup>
+Epsilon closure of a **set of states S**, E(S), is the set of all states rechable from S in **0 or more** ε-transitions. Note, this implies that S is a subset of E(S), S ⊆ E (S). And, E(S) can get to everything that require no move, not just its neighbors
+
+We can now extend the definition of δ: (Q × (Σ ∪ {ε})) → 2<sup>Q</sup> to δ<sup>*</sup>: (2<sup>Q</sup> × Σ<sup>∗</sup>) → 2<sup>Q</sup> via:
+- δ(S, ε) = E(S)
+- δ(S, aw) = δ<sup>*</sup>(Union(q in S) E(δ(q, a)), w)
+
+An ε-NFA given by *M = (Σ, Q, q0, A, δ)* **accepts a string** *w* if and only if *δ<sup> * </sup>(E({q<sub>0</sub>}), w) ∩ A != 0*
+
+order of epsilon closure and delta: recurssion must start and end with epsilon closure, so at each iteration, it's going to be S = union(epsilon closure(delta())), this is equivalent to S = epsilon closure(union(delta)). It's just that epsilon closure need to happen after delta
+
+### ε-NFA Implementation
+``` bash
+w = a1a2...an
+S = E({q0})
+
+for i in 1 to n do
+    S = E( Union(q in S) δ(q, ai) )
+end for
+
+if S ∩ A != 0 then
+    Accept
+else
+    Reject
+end if
+```
+
+### Tracing ε-NFA
+Tracing through previous ε-NFA example on "L = {abc} ∪ {w : w ends with cc}"
+```
+Processed       Remaining           S
+ε               abcacc              {q0, q1, q5}
+a               bcacc               {q2, q5}
+ab              cacc                {q3, q5}
+abc             acc                 {q4, q5, q6}
+abca            cc                  {q5}
+abcac           c                   {q5, q6}
+abcacc          ε                   {a5, a6, a7}
+```
+Since {q5, q6, q7} ∩ {q4, q7} != ∅, accept
+
+### Equivalence
+By same technique of translating NFA to DFA, we can also translate every ε-NFA to DFA. This combined with Kleene's Thm, we can show that every language represented by ε-NFA is regular.
+
+The translation to DFA process can be automated, but it may not always give the smallest DFA.
+
+And if we can show that every regular expression can be represented using an ε-NFA, then we have proved one direction of Kleene's Thm. This is done by structual induction (not like 245)
+
+### Regex to ε-NFA
+1. ∅, empty language
+
+<img src="img/lec8-3.png">
+
+2. {ε}, language only accept empty string
+
+<img src="img/lec8-4.png">
+
+3. {a}
+
+<img src="img/lec8-5.png">
+
+4. L<sub>1</sub> ∪ L<sub>2</sub>, assume there is ε-NFA for L<sub>1</sub> and L<sub>2</sub>
+
+<img src="img/lec8-6.png">
+
+5. L<sub>1</sub>L<sub>2</sub>, assume there is ε-NFA for L<sub>1</sub> and L<sub>2</sub>
+
+<img src="img/lec8-7.png">
+
+6. L<sup>∗</sup>, assume there is ε-NFA for L
+
+<img src="img/lec8-8.png">
+
+## Scanning
+Is C a regular language? No.
+
+But followings are regular:
+- C keyword
+- C identifier
+- C literal
+- C operator
+- C comments
+
+Sequences of these (union, concatenation, star) are also regular. Finite automata can do our tokenization, hence scanning. Which will break the input text into valid tokens, or reject if input is invalid.
+
+Note: Both maximal munch and simplified maximal are greedy algorithms that seek for largest acceptable toknes, but they aren't guaranteed to find a tokenization if a tokenization exists....
+
+### Maximal Munch
+- consume characters until don't have any valid transitions
+- **backtrack** to last accepting state if still have more input, output the last acceptable token, then restart with the remaining input. If there are no last seen acceptaing state, reject.
+
+Note: at the end of a valid input, there are no valid transitions anymore, AND the last seen acceptable state is actually the last character. So we output the token, then input is now ε, and we accept the input.
+
+### Simplified Maximal Munch
+- consume characters until don't have any valid transitions
+- if in accepting sate, output the token, then restart with the remaining input. Otherwise, reject.
+
+To compansate no backtracking or recording of last seen acceptable state. We can add spaces to separate input. "ababca" -> "a b abca"
+
+#### Algorithm for Simplefied Maximal Munch
+Assuming finite automata is DFA(Σ, Q, q0, A, δ), can be replaced to use NFA or ε-NFA instead
+
+```
+w = input string
+s=q0
+repeat
+    if δ(s, peek(w)) == ERROR then
+        if s ∈ A then
+            Output token for state s
+            s = q0
+        else
+            Reject
+        end if
+    else
+        s = δ(s, consume(w))
+    end if
+until w is empty
+
+if s ∈ A then
+    Output token for state s and Accept
+else
+    Reject
+end if
+```
+
+# Lecture 9
+## Context Free Grammar
+CFG is essentially a set of rewrite rules
+
+A Context Free Grammar (CFG) is a 4 tuple (N, Σ, P, S) where
+- N is a finite non-empty set of ***non-terminal symbols***
+- Σ is an alphabet; a set of non-empty ***terminal symbols***
+- P is a finite set of productions, each of the form ***A → β***
+    - where A ∈ N and β ∈ (N ∪ Σ)<sup>∗</sup>, also called V<sup>*</sup>
+    - only non-terminals can appear on left side of →, hence only non-terminals can be rewritten
+- S ∈ N is a starting symbol
+
+Note: We set V = N ∪ Σ to denote the vocabulary, that is, the set of all symbols in our language.
+
+Over a CFG (N, Σ, P, S), we say that
+- A derives γ and we write A ⇒ γ if and only if there is a rule A → γ in P
+- αAβ ⇒ αγβ if and only if there is a rule A → γ in P
+- α ⇒<sup>∗</sup> γ if and only if a derivation exists, that is, there exists δ<sub>i</sub> ∈ V<sup>∗</sup> for 0 ≤ i ≤ k such that α = δ<sub>0</sub> ⇒ δ<sub>1</sub> ⇒ ... ⇒ δ<sub>k</sub> = γ
+    - Note that k can be 0, meaning α = δ<sub>0</sub> ⇒ δ<sub>0</sub> = α, if such derivation exists
+
+In most programming languages, the terminals (alphabet) of the context-free language are the **tokens**, which are the **words** in the regular language
+
+Could also define CFG directly over the input characters. This does not involve any scanning phase, thus is called *scannerless*
+
+### Example
+For Σ = {(, )} and L = {w : w is a balanced string of parentheses}, S is starting symbol by convention
+- S -> ε
+- S -> (S)
+- S -> SS
+
+This is equivalent to
+- S -> ε | (S) | SS
+
+Find a derivation of (()())\
+S => (S) => (SS) => ((S)S) => (()S) => (()(S)) => (()()) \
+Hence, S =><sup>*</sup> (()())
+
+## Context Free Language
+It's like regular language + recurssion. It's expressions are defined using *grammars* (CFG)
+
+Definition: Define the *language of a CFG (N, Σ, P, S)* to be *L(G) = {w ∈ Σ<sup>∗</sup>: S ⇒<sup>∗</sup> w}*
+
+Definition: A language is *context-free* if and only if there exists a CFG *G* such that *L = L(G)*
+
+### Regex -> Context Free
+Every regular language is context-free. How?
+
+Informal proof:
+1. ∅: ({S}, {a}, ∅, S)
+2. {ε}:({S},{a},S→ε,S)
+3. {a}:({S},{a},S→a,S)
+4. Union: {a} ∪ {b}: ({S}, {a, b}, S → a | b, S)
+5. Concatenation: {ab}: ({S}, {a, b}, S → ab, S)
+6. Kleene Star: {a}<sup>∗</sup>: ({S}, {a}, S → Sa | ε, S)
+
+
+
+
+
+practice problems
+S -> a | b | c
+S -> S+S | S-S | S*S | S/S
+
+S -> (S)
+S -> a | b | c
+S -> S+S | S-S | S*S | S/S
