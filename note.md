@@ -1009,3 +1009,8 @@ S -> S+S | S-S | S*S | S/S
 S -> (S)
 S -> a | b | c
 S -> S+S | S-S | S*S | S/S
+
+
+
+# Lecture 10
+In unambiguous grammar, all expansions should get to same parse tree
