@@ -227,7 +227,8 @@ lis $8
 .word 0x7
 lis $9
 .word 4
-mult $2, $9 mflo $3
+mult $2, $9
+mflo $3
 add $3, $3, $1
 sw $8, -4($3)
 jr $31   // always include "jr 31" at the end of every program
@@ -276,7 +277,8 @@ lis $1
 add $3, $0, $0
 add $3, $3, $2 ; line -3
 sub $2, $2, $1 ; line -2
-bne $2, $0, -3 ; line -1 from here jr $31
+bne $2, $0, -3 ; line -1, branch from here
+jr $31         ; line 0
 ```
 Note: semicolons for comments in MIPS assembly
 
@@ -855,7 +857,7 @@ ab              cacc                {q3, q5}
 abc             acc                 {q4, q5, q6}
 abca            cc                  {q5}
 abcac           c                   {q5, q6}
-abcacc          ε                   {a5, a6, a7}
+abcacc          ε                   {q5, q6, q7}
 ```
 Since {q5, q6, q7} ∩ {q4, q7} != ∅, accept
 
@@ -998,19 +1000,5 @@ Informal proof:
 5. Concatenation: {ab}: ({S}, {a, b}, S → ab, S)
 6. Kleene Star: {a}<sup>∗</sup>: ({S}, {a}, S → Sa | ε, S)
 
-
-
-
-
-practice problems
-S -> a | b | c
-S -> S+S | S-S | S*S | S/S
-
-S -> (S)
-S -> a | b | c
-S -> S+S | S-S | S*S | S/S
-
-
-
 # Lecture 10
-In unambiguous grammar, all expansions should get to same parse tree
+In unambiguous grammar, all expansions should get to same parse tree, regardless the order of expansion (left expand, right expand, etc.)
